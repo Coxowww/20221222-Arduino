@@ -1,13 +1,14 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include <SimpleDHT.h>
 
-int pinDHT11 = 8;
+int pinDHT11 = 14;
 SimpleDHT11 dht11;
 
-const char* ssid = "wifiSSID";
-const char* password = "123";
-const byte trigPin = 10;
-const int echoPin = 9;
+const char* ssid = "ArduinoWiFi";
+const char* password = "12345678";
+const byte trigPin = 12;
+const int echoPin = 13;
 unsigned long d;
 
 WiFiServer server(80);
@@ -28,8 +29,8 @@ void setup() {
   Serial.begin(115200);
   delay(10);
 
-  pinMode(2,OUTPUT);
-  digitalWrite(2,0);
+  pinMode(15,OUTPUT);
+  digitalWrite(15,0);
 
   //Connect
   Serial.println("Connected to");
@@ -57,11 +58,11 @@ void loop() {
   }
   
   Serial.println("new clinet");
-  while(!clinet.available()){
+  while(!client.available()){
     delay(1);
   }
 
-  String req = client.readStringUntil('\r');
+ String req = client.readStringUntil('\r');
   Serial.println(req);
   client.flush();
 
@@ -72,29 +73,31 @@ void loop() {
   else if(req.indexOf("/gpio/1")!= -1)
     val =1;
   else{
-    Serial.println("invalid request");
-    client.stop();
-    return;
+    Serial.println("invalid request");     
     }
 
-  digitalWrite(2,val);
-  d= ping()/58;
+  digitalWrite(15,val); 
+  
 
   byte temperature = 0;
   byte humidity = 0;
   int err = SimpleDHTErrSuccess;
   if ((err = dht11.read(pinDHT11, &temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
-    return;
+  //  return;
   }
-  
+ 
+  d= ping()/58;
   String s = "HTTP/1.1 200 OK\r\nConnect-Type: text/html\r\n\r\n<!DOCTYPE HTML>\r\n<html>\r\nDistance:";
   s+= d ; 
-  s+= "cm\r\n Temperature:"
+  s+= "cm\r\n Temperature:";
   s+= temperature;
-  s+= "C\r\n Humidity:"
+  s+= "C\r\n Humidity:";
   s+= humidity;
   s+= "%\r\n </html>\n";
+  
+  //String s = "HTTP/1.1 200 OK\r\nConnect-Type: text/html\r\n\r\n<!DOCTYPE HTML>\r\n<html>\r\nHEHEBOI";
 
+  //s+= "</html>";
   client.print(s);
   delay(1);
   Serial.println("Client disconnected");
